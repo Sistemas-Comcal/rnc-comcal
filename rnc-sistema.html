@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RNC — Registro de Não Conformidade</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0e0e0e;
+    --paper: #f4f4f8;
+    --cream: #eaeaf2;
+    --steel: #28166f;
+    --rust: #28166f;
+    --rust-light: #4a3b86;
+    --gold: #b8860b;
+    --green: #1a6b3c;
+    --green-light: #27ae60;
+    --mid: #7f8c8d;
+    --border: #d0cce8;
+    --shadow: rgba(40,22,111,0.08);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    background: #28166f;
+    color: #fff;
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid #4a3b86;
+  }
+
+  .logo-area { display: flex; flex-direction: column; gap: 2px; }
+  .logo-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: 0.55;
+  }
+  .logo-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    letter-spacing: -0.3px;
+  }
+
+  .badge-sistema {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 6px 14px;
+    border-radius: 2px;
+  }
+
+  /* ─── MAIN CONTAINER ─── */
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ─── INTRO ─── */
+  .intro {
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .intro h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    line-height: 1.2;
+    margin-bottom: 10px;
+    color: var(--steel);
+  }
+
+  .intro p {
+    color: var(--mid);
+    font-size: 14px;
+    max-width: 500px;
+  }
+
+  /* ─── STEPS ─── */
+  .steps {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 40px;
+  }
+
+  .step {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    transition: background 0.4s;
+  }
+
+  .step.active { background: var(--steel); }
+  .step.done { background: var(--green); }
+
+  /* ─── SECTIONS ─── */
+  .section {
+    display: none;
+    animation: fadeUp 0.4s ease;
+  }
+  .section.visible { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── FORM ELEMENTS ─── */
+  .form-group {
+    margin-bottom: 28px;
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    margin-bottom: 8px;
+    color: var(--steel);
+  }
+
+  label .req { color: var(--rust); margin-left: 2px; }
+
+  label .hint {
+    font-weight: 400;
+    color: var(--mid);
+    font-size: 12px;
+    margin-left: 6px;
+    letter-spacing: 0;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  textarea,
+  select {
+    width: 100%;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    appearance: none;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--steel);
+    box-shadow: 0 0 0 3px rgba(44,62,80,0.08);
+  }
+
+  textarea { resize: vertical; min-height: 100px; }
+
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--mid);
+    font-size: 12px;
+  }
+
+  /* ─── RADIO CARDS ─── */
+  .radio-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .radio-card {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .radio-card input { position: absolute; opacity: 0; }
+
+  .radio-card-inner {
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+    background: #fff;
+    transition: all 0.2s;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .radio-card input:checked + .radio-card-inner {
+    border-color: var(--steel);
+    background: var(--cream);
+    box-shadow: 0 0 0 3px rgba(44,62,80,0.06);
+  }
+
+  .radio-icon {
+    font-size: 20px;
+    line-height: 1;
+    margin-top: 1px;
+  }
+
+  .radio-text strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--steel);
+    margin-bottom: 2px;
+  }
+
+  .radio-text span {
+    font-size: 12px;
+    color: var(--mid);
+    line-height: 1.4;
+  }
+
+  /* ─── UPLOAD AREA ─── */
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 4px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fff;
+    position: relative;
+  }
+
+  .upload-area:hover, .upload-area.dragover {
+    border-color: var(--steel);
+    background: var(--cream);
+  }
+
+  .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+  .upload-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+  .upload-label { font-size: 13px; color: var(--mid); }
+  .upload-label strong { color: var(--steel); }
+
+  .file-list { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .file-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-item-remove {
+    cursor: pointer;
+    color: var(--rust);
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  /* ─── BUTTONS ─── */
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 36px;
+  }
+
+  .btn {
+    padding: 13px 28px;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.2px;
+  }
+
+  .btn-primary {
+    background: var(--steel);
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: #1a252f; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(44,62,80,0.25); }
+  .btn-primary:active { transform: none; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--steel);
+    border: 1.5px solid var(--border);
+  }
+
+  .btn-secondary:hover { border-color: var(--steel); background: var(--cream); }
+
+  .btn-full { width: 100%; justify-content: center; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+  /* ─── ANÁLISE ─── */
+  .analise-box {
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .analise-header {
+    background: var(--steel);
+    color: #fff;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .analise-body {
+    padding: 20px;
+    background: #fff;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink);
+    min-height: 80px;
+  }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── VEREDICTO ─── */
+  .veredicto {
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-top: 20px;
+    border: 1.5px solid;
+    display: none;
+    animation: fadeUp 0.4s ease;
+  }
+
+  .veredicto.aprovada {
+    background: #f0faf5;
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .veredicto.reprovada {
+    background: #fef6f5;
+    border-color: #e8a39a;
+    color: var(--rust);
+  }
+
+  .veredicto-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  .veredicto-body { font-size: 13px; line-height: 1.6; opacity: 0.9; }
+
+  /* ─── RESULTADO FINAL ─── */
+  .resultado-card {
+    text-align: center;
+    padding: 48px 32px;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .resultado-icon { font-size: 56px; margin-bottom: 16px; display: block; }
+
+  .resultado-card h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--steel);
+    margin-bottom: 10px;
+  }
+
+  .resultado-card p {
+    color: var(--mid);
+    font-size: 14px;
+    max-width: 420px;
+    margin: 0 auto 24px;
+    line-height: 1.7;
+  }
+
+  .protocolo {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    padding: 8px 18px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    color: var(--steel);
+    margin-bottom: 28px;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 580px) {
+    header { padding: 20px; }
+    .container { padding: 32px 16px 60px; }
+    .radio-grid { grid-template-columns: 1fr; }
+    .btn-row { flex-direction: column; }
+    .intro h1 { font-size: 24px; }
+  }
+
+  /* ─── NOTA DE AVISO ─── */
+  .aviso {
+    background: #fff8e1;
+    border: 1px solid #f0c040;
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #7a5c00;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .aviso-icon { flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <span class="logo-label">Sistema de Qualidade</span>
+    <span class="logo-title">Registro de Não Conformidade</span>
+  </div>
+  <span class="badge-sistema">RNC · v1.0</span>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h1>Abrir uma RNC</h1>
+    <p>Preencha o formulário abaixo. Sua solicitação será registrada e encaminhada ao setor responsável.</p>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="steps" id="steps">
+    <div class="step active" id="step1"></div>
+    <div class="step" id="step2"></div>
+    <div class="step" id="step3"></div>
+  </div>
+
+  <!-- ═══ SEÇÃO 1: IDENTIFICAÇÃO ═══ -->
+  <div class="section visible" id="sec1">
+    <span class="section-label">01 — Identificação</span>
+
+    <div class="form-group">
+      <label>Solicitante <span class="req">*</span> <span class="hint">Quem está abrindo esta RNC</span></label>
+      <input type="text" id="solicitante" placeholder="Seu nome completo">
+    </div>
+
+    <div class="form-group">
+      <label>Empresa / Razão Social <span class="req">*</span></label>
+      <input type="text" id="empresa" placeholder="Ex: Metalúrgica São Paulo Ltda.">
+    </div>
+
+    <div class="form-group">
+      <label>Contato do cliente que abriu a reclamação <span class="req">*</span></label>
+      <input type="text" id="responsavel" placeholder="Nome do contato no cliente">
+    </div>
+
+    <div class="form-group">
+      <label>E-mail para retorno <span class="req">*</span></label>
+      <input type="email" id="email" placeholder="seuemail@empresa.com.br">
+    </div>
+
+    <div class="form-group">
+      <label>Número do Pedido / Nota Fiscal <span class="hint">(se disponível)</span></label>
+      <input type="text" id="nf" placeholder="Ex: NF-e 000123456">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goSec2()">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- ═══ SEÇÃO 2: DESCRIÇÃO DA OCORRÊNCIA ═══ -->
+  <div class="section" id="sec2">
+    <span class="section-label">02 — Ocorrência</span>
+
+    <div class="form-group">
+      <label>Tipo de RNC <span class="req">*</span></label>
+      <div class="radio-grid">
+        <label class="radio-card">
+          <input type="radio" name="tipo" value="quantidade">
+          <div class="radio-card-inner">
+            <span class="radio-icon">⚖️</span>
+            <div class="radio-text">
+              <strong>Divergência de Quantidade</strong>
+              <span>Diferença entre quantidade pedida e recebida</span>
+            </div>
+          </div>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="tipo" value="qualidade">
+          <div class="radio-card-inner">
+            <span class="radio-icon">🔎</span>
+            <div class="radio-text">
+              <strong>Qualidade</strong>
+              <span>Peças com defeito ou fora de especificação</span>
+            </div>
+          </div>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="tipo" value="devolucao">
+          <div class="radio-card-inner">
+            <span class="radio-icon">↩️</span>
+            <div class="radio-text">
+              <strong>Solicitação de Devolução</strong>
+              <span>Pedido de retorno de mercadoria</span>
+            </div>
+          </div>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="tipo" value="reclamacao">
+          <div class="radio-card-inner">
+            <span class="radio-icon">📋</span>
+            <div class="radio-text">
+              <strong>Registro de Reclamação</strong>
+              <span>Prazo, faturamento, atendimento, etc.</span>
+            </div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group" id="grp-quantidade" style="display:none">
+      <label>Quantidade recebida <span class="req">*</span> <span class="hint">vs. quantidade pedida</span></label>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div>
+          <input type="number" id="qtd-pedida" placeholder="Qtd. pedida">
+        </div>
+        <div>
+          <input type="number" id="qtd-recebida" placeholder="Qtd. recebida">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Descreva o problema <span class="req">*</span></label>
+      <textarea id="descricao" rows="4" placeholder="Descreva detalhadamente o que ocorreu…"></textarea>
+    </div>
+
+    <div class="form-group" id="grp-upload">
+      <label>Evidências <span id="upload-req"></span></label>
+      <div class="upload-area" id="uploadArea">
+        <input type="file" id="fileInput" multiple accept="image/*,.pdf" onchange="handleFiles(this.files)">
+        <span class="upload-icon">📎</span>
+        <div class="upload-label">
+          <strong>Clique para anexar</strong> ou arraste arquivos aqui<br>
+          <span>Fotos, etiquetas, nota fiscal (JPG, PNG, PDF)</span>
+        </div>
+      </div>
+      <div class="file-list" id="fileList"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goSec1()">← Voltar</button>
+      <button class="btn btn-primary" onclick="analisarRNC()">Registrar RNC →</button>
+    </div>
+  </div>
+
+  <!-- ═══ SEÇÃO 3: ANÁLISE E RESULTADO ═══ -->
+  <div class="section" id="sec3">
+    <span class="section-label">03 — Processando</span>
+
+    <div class="analise-box">
+      <div class="analise-header">
+        <div class="spinner" id="spinner"></div>
+        <span id="analise-status">Processando sua RNC…</span>
+      </div>
+      <div class="analise-body" id="analise-texto">
+        Aguarde enquanto verificamos os dados e encaminhamos ao setor responsável.
+      </div>
+    </div>
+
+    <div class="veredicto" id="veredicto">
+      <div class="veredicto-title" id="veredicto-title"></div>
+      <div class="veredicto-body" id="veredicto-body"></div>
+    </div>
+
+    <div class="btn-row" id="btn-confirmar" style="display:none">
+      <button class="btn btn-primary btn-full" onclick="confirmarEnvio()">Confirmar e Enviar RNC ✓</button>
+    </div>
+  </div>
+
+  <!-- ═══ SEÇÃO 4: CONFIRMAÇÃO ═══ -->
+  <div class="section" id="sec4">
+    <div class="resultado-card" id="resultado-card">
+      <!-- preenchido via JS -->
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── ESTADO ───
+let arquivos = [];
+let classificacao = null;
+
+// ─── DRAG & DROP ───
+const ua = document.getElementById('uploadArea');
+ua.addEventListener('dragover', e => { e.preventDefault(); ua.classList.add('dragover'); });
+ua.addEventListener('dragleave', () => ua.classList.remove('dragover'));
+ua.addEventListener('drop', e => { e.preventDefault(); ua.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+
+function handleFiles(files) {
+  for (const f of files) {
+    if (!arquivos.find(a => a.name === f.name)) arquivos.push(f);
+  }
+  renderFiles();
+}
+
+function renderFiles() {
+  const list = document.getElementById('fileList');
+  list.innerHTML = '';
+  arquivos.forEach((f, i) => {
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    item.innerHTML = `<span>📄</span><span class="file-item-name">${f.name}</span><span class="file-item-remove" onclick="removeFile(${i})">✕</span>`;
+    list.appendChild(item);
+  });
+}
+
+function removeFile(i) {
+  arquivos.splice(i, 1);
+  renderFiles();
+}
+
+// ─── RADIO: mostrar campo de quantidade ───
+document.querySelectorAll('input[name="tipo"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.getElementById('grp-quantidade').style.display = r.value === 'quantidade' ? 'block' : 'none';
+    const reqSpan = document.getElementById('upload-req');
+    if (r.value === 'qualidade') {
+      reqSpan.innerHTML = '<span class="req">* obrigatório para RNCs de qualidade</span>';
+    } else {
+      reqSpan.innerHTML = '<span style="color:var(--mid);font-weight:400;font-size:12px;">(recomendado)</span>';
+    }
+  });
+});
+
+// ─── NAVEGAÇÃO ───
+function setStep(n) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('step' + i);
+    el.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+  ['sec1','sec2','sec3','sec4'].forEach((s, idx) => {
+    document.getElementById(s).className = 'section' + (idx + 1 === n ? ' visible' : (idx + 1 === 4 && n === 4 ? ' visible' : ''));
+  });
+}
+
+function goSec1() { setStep(1); }
+
+function goSec2() {
+  const solicitante = document.getElementById('solicitante').value.trim();
+  const empresa = document.getElementById('empresa').value.trim();
+  const resp = document.getElementById('responsavel').value.trim();
+  const email = document.getElementById('email').value.trim();
+
+  // Limpa erros anteriores
+  ['solicitante','empresa','responsavel','email'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.borderColor = '';
+    const err = document.getElementById('err-' + id);
+    if (err) err.remove();
+  });
+
+  let ok = true;
+
+  function markError(id, msg) {
+    const el = document.getElementById(id);
+    el.style.borderColor = 'var(--rust)';
+    const err = document.createElement('div');
+    err.id = 'err-' + id;
+    err.style.cssText = 'color:var(--rust);font-size:12px;margin-top:4px;';
+    err.textContent = msg;
+    el.parentNode.appendChild(err);
+    ok = false;
+  }
+
+  if (!solicitante) markError('solicitante', 'Informe o nome do solicitante.');
+  if (!empresa)    markError('empresa',     'Informe a empresa.');
+  if (!resp)       markError('responsavel', 'Informe o contato do cliente.');
+  if (!email)      markError('email',       'Informe o e-mail.');
+  else if (!email.includes('@')) markError('email', 'E-mail inválido.');
+
+  if (!ok) return;
+  setStep(2);
+}
+
+// ─── PROCESSAMENTO — envia direto ao Power Automate ───
+async function analisarRNC() {
+  const tipo = document.querySelector('input[name="tipo"]:checked');
+  const descricao = document.getElementById('descricao').value.trim();
+
+  if (!tipo) { alert('Selecione o tipo de RNC.'); return; }
+  if (!descricao) { alert('Descreva o problema ocorrido.'); return; }
+
+  if (tipo.value === 'qualidade' && arquivos.length === 0) {
+    alert('Para RNCs de qualidade, anexe ao menos uma evidência (foto, etiqueta ou nota fiscal).');
+    return;
+  }
+
+  setStep(3);
+  document.getElementById('sec3').className = 'section visible';
+  document.getElementById('sec4').className = 'section';
+
+  const solicitante   = document.getElementById('solicitante').value.trim();
+  const empresa       = document.getElementById('empresa').value.trim();
+  const responsavel   = document.getElementById('responsavel').value.trim();
+  const email         = document.getElementById('email').value.trim();
+  const nf            = document.getElementById('nf').value.trim();
+  const qtdPedida     = document.getElementById('qtd-pedida').value;
+  const qtdRecebida   = document.getElementById('qtd-recebida').value;
+  const evidencias    = arquivos.length > 0 ? arquivos.map(f => f.name).join(', ') : 'Nenhuma';
+
+  // Mapeamento de tipo para categoria e responsável
+  const tipoMap = {
+    'quantidade': { categoria: 'Divergência de Quantidade', responsavel: 'Jonas',  email: 'jonas.vargas@comcal.com.br' },
+    'qualidade':  { categoria: 'Qualidade',                 responsavel: 'Maitê',  email: 'maite@comcal.com.br' },
+    'devolucao':  { categoria: 'Solicitação de Devolução',  responsavel: 'Jonas',  email: 'jonas.vargas@comcal.com.br' },
+    'reclamacao': { categoria: 'Registro de Reclamação',    responsavel: 'Jonas',  email: 'jonas.vargas@comcal.com.br' },
+  };
+
+  const tipoInfo = tipoMap[tipo.value];
+  const protocolo = 'RNC-' + Date.now().toString().slice(-8);
+
+  // Payload para o Power Automate
+  classificacao = {
+    classificacao: tipo.value === 'qualidade' ? 'ENCAMINHAR_ENGENHARIA' : 'RESOLVER_AUTOMATICAMENTE',
+    categoria: tipoInfo.categoria,
+    prioridade: tipo.value === 'qualidade' ? 'ALTA' : 'MEDIA',
+    acao: tipo.value === 'qualidade'
+      ? 'Sua RNC foi encaminhada para análise técnica. Retorno em até 2 dias úteis.'
+      : 'Sua RNC foi registrada e encaminhada ao setor responsável.',
+  };
+
+  const payload = {
+    protocolo,
+    solicitante,
+    empresa,
+    contato: responsavel,
+    email,
+    nf: nf || 'Não informado',
+    tipo: tipoInfo.categoria,
+    descricao: descricao + (tipo.value === 'quantidade' && qtdPedida
+      ? ' | Qtd. pedida: ' + qtdPedida + ' | Qtd. recebida: ' + qtdRecebida
+      : ''),
+    prioridade: classificacao.prioridade,
+    responsavel: tipoInfo.responsavel,
+    emailResponsavel: tipoInfo.email,
+    evidencias,
+  };
+
+  const WEBHOOK = 'https://default11bf6f50d15541bab2e200281501dc.2b.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/7b7a742b4e924857887f4bff6c2cd9fe/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=2Tnh6XWH4U5a5JXNZ11_Fd5MxA6wEJrpX5k8rJRzAy0';
+
+  try {
+    await fetch(WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    // UI de sucesso
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('analise-status').textContent = 'RNC processada';
+    document.getElementById('analise-texto').textContent = 'Sua solicitação foi recebida e encaminhada ao setor responsável.';
+
+    const verd = document.getElementById('veredicto');
+    const isEngenharia = classificacao.classificacao === 'ENCAMINHAR_ENGENHARIA';
+    verd.className = 'veredicto ' + (isEngenharia ? 'aprovada' : 'reprovada');
+    document.getElementById('veredicto-title').textContent = isEngenharia
+      ? '✓ RNC encaminhada para análise técnica'
+      : '✓ RNC registrada e encaminhada';
+    document.getElementById('veredicto-body').innerHTML =
+      '<strong>Categoria:</strong> ' + classificacao.categoria +
+      ' &nbsp;|&nbsp; <strong>Prioridade:</strong> ' + classificacao.prioridade +
+      '<br><br>' + classificacao.acao;
+    verd.style.display = 'block';
+    document.getElementById('btn-confirmar').style.display = 'flex';
+
+  } catch (err) {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('analise-status').textContent = 'Erro no processamento';
+    document.getElementById('analise-texto').textContent = 'Não foi possível registrar sua solicitação. Por favor, tente novamente.';
+    console.error(err);
+  }
+}
+
+// ─── ROTEAMENTO DE RESPONSÁVEL ───
+function getResponsavel(tipoRNC) {
+  return tipoRNC === 'qualidade'
+    ? { nome: 'Maitê', email: 'maite@comcal.com.br' }
+    : { nome: 'Jonas', email: 'jonas.vargas@comcal.com.br' };
+}
+
+// ─── CONFIRMAÇÃO FINAL ───
+function confirmarEnvio() {
+  const protocolo = 'RNC-' + Date.now().toString().slice(-8);
+  const tipoRNC = document.querySelector('input[name="tipo"]:checked').value;
+  const responsavel = getResponsavel(tipoRNC);
+
+  // Mostra seção 4
+  document.getElementById('sec3').className = 'section';
+  document.getElementById('sec4').className = 'section visible';
+  document.getElementById('step3').className = 'step done';
+  document.getElementById('steps').style.display = 'none';
+
+  const card = document.getElementById('resultado-card');
+  card.innerHTML = `
+    <span class="resultado-icon">✅</span>
+    <h2>RNC registrada com sucesso</h2>
+    <p>Sua ocorrência foi registrada e encaminhada ao responsável. Você receberá um retorno em breve.</p>
+    <div class="protocolo">Protocolo: ${protocolo}</div>
+    <div class="btn-row" style="justify-content:center;margin-top:28px;">
+      <button class="btn btn-secondary" onclick="location.reload()">Abrir nova RNC</button>
+    </div>
+  `;
+
+    // Envio já realizado na etapa de análise
+}
+</script>
+</body>
+</html>
